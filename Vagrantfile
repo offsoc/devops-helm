@@ -16,6 +16,14 @@ kubectl config set-context --current --namespace=crczp
 helm repo add jetstack https://charts.jetstack.io
 helm repo add stakater https://stakater.github.io/stakater-charts
 helm repo update
+helm install cnpg \
+  cnpg/cloudnative-pg \
+  --namespace cnpg-system \
+  --create-namespace \
+  --version 0.24.0 \
+  --set config.clusterWide=true \
+  --wait
+helm upgrade --install crczp-postgres /vagrant/helm/crczp-postgres -f /vagrant/vagrant-values.yaml --wait -n crczp
 helm upgrade --install \
   cert-manager jetstack/cert-manager \
   --namespace cert-manager \
@@ -25,7 +33,6 @@ helm upgrade --install \
   --wait
 helm upgrade --install reloader stakater/reloader --namespace reloader --create-namespace --wait
 helm upgrade --install crczp-certs /vagrant/helm/crczp-certs -f /vagrant/vagrant-values.yaml -n crczp --wait --create-namespace
-helm upgrade --install crczp-postgres /vagrant/helm/crczp-postgres -f /vagrant/vagrant-values.yaml --wait -n crczp
 helm upgrade --install crczp-gen-users /vagrant/helm/crczp-gen-users -f /vagrant/vagrant-values.yaml --wait -n crczp
 kubectl apply -n crczp -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/25.0.1/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
 kubectl apply -n crczp -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/25.0.1/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml

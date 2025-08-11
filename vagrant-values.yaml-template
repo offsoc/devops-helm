@@ -60,3 +60,6 @@ sandbox:
     user: git
     ansibleNetworkingUrl: https://github.com/cyberrangecz/ansible-stage-one.git
     ansibleNetworkingRev: v1.0.0
+
+cluster:
+  superuserPassword: password
