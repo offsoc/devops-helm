@@ -31,7 +31,7 @@ helm upgrade --install cnpg cloudnative-pg/cloudnative-pg \
   --wait
 
 helm upgrade --install crczp-postgres /vagrant/helm/crczp-postgres \
-  --namespace crczp \
+  --namespace cnpg-system \
   --create-namespace \
   -f /vagrant/vagrant-values.yaml \
   --wait
