@@ -1,8 +1,8 @@
 replicasCount: 1
 
 image:
-  url: ghcr.io/cyberrangecz/backend-answers-storage/answers-storage-service
-  tag: v1.0.0
+  url: ghcr.io/cyberrangecz/backend-guacamole/guacamole-service
+  tag: v0.0.2-dev
 
 mounts:
   guacamole-service:
