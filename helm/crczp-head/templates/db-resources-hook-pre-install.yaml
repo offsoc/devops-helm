@@ -12,14 +12,45 @@ spec:
     - name: pre-install-job
       image: ghcr.io/cloudnative-pg/postgresql:17-standard-bookworm
       imagePullPolicy: IfNotPresent
+      env:
+        - name: PGPASSWORD
+          value: {{ $postgres.password | quote }}
       command:
         - "/bin/bash"
         - "-c"
-        - | {{- range $k, $v := $postgresServices }}
-          PGPASSWORD={{ $postgres.password }} psql -h {{ $postgres.serviceName }} -p {{ $postgres.port }} -U {{ $postgres.user }} -c 'CREATE USER "{{ $v.dbUser }}";' 2> /dev/null
-          PGPASSWORD={{ $postgres.password }} psql -h {{ $postgres.serviceName }} -p {{ $postgres.port }} -U {{ $postgres.user }} -c "ALTER USER \"{{ $v.dbUser }}\" PASSWORD '{{ $v.dbPassword }}';" 2> /dev/null
-          PGPASSWORD={{ $postgres.password }} psql -h {{ $postgres.serviceName }} -p {{ $postgres.port }} -U {{ $postgres.user }} -c 'CREATE DATABASE "{{ $v.dbName }}" OWNER "{{ $v.dbUser }}";' 2> /dev/null
+        - |
+          # Exit immediately if a command exits with a non-zero status.
+          set -e
+
+          echo "Waiting for PostgreSQL to become available..."
+          until pg_isready -h {{ $postgres.serviceName }} -p {{ $postgres.port }} -U {{ $postgres.user }}; do
+            echo "Postgres is unavailable - sleeping"
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+
+          echo "Creating database users and databases..."
+          psql -h {{ $postgres.serviceName }} -p {{ $postgres.port }} -U {{ $postgres.user }} <<-EOF
+          {{- range $k, $v := $postgresServices }}
+            -- Create user/role if it does not exist
+            DO \$$
+            BEGIN
+               IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '{{ $v.dbUser }}') THEN
+                  CREATE ROLE "{{ $v.dbUser }}" WITH LOGIN PASSWORD '{{ $v.dbPassword }}';
+               ELSE
+                  RAISE NOTICE 'Role "{{ $v.dbUser }}" already exists, skipping creation.';
+                  -- Optionally, update the password if it exists
+                  ALTER ROLE "{{ $v.dbUser }}" WITH PASSWORD '{{ $v.dbPassword }}';
+               END IF;
+            END
+            \$$;
+
+            SELECT 'CREATE DATABASE "{{ $v.dbName }}" OWNER "{{ $v.dbUser }}"'
+            WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ $v.dbName }}');\gexec
+            GRANT ALL PRIVILEGES ON DATABASE "{{ $v.dbName }}" TO "{{ $v.dbUser }}";
+
           {{- end }}
-          exit 0
+          EOF
+          echo "Database resources created successfully."
   restartPolicy: Never
   terminationGracePeriodSeconds: 0
