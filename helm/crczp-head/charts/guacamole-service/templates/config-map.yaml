@@ -21,7 +21,7 @@ data:
 
 
     # calling user-and-group project, e.g., https://localhost:8084/user-and-group/api/v1
-    user-and-group-service.uri=http://{{ .Values.global.services.guacamole.name }}:{{ .Values.global.services.guacamole.port }}{{ .Values.global.services.guacamole.contextPath }}
+    user-and-group-server.uri=http://{{ .Values.global.services.userAndGroup.name }}:{{ .Values.global.services.userAndGroup.port }}{{ .Values.global.services.userAndGroup.contextPath }}
     # calling sandbox-service, e.g., http://localhost:8080/sandbox-service/api/v1
     sandbox-service.uri=http://{{ .Values.global.services.sandbox.name }}:{{ .Values.global.services.sandbox.port }}{{ .Values.global.services.sandbox.contextPath }}
     # calling elasticsearch-service, e.g., http://elastic-service:8085/elastic/api/v1
